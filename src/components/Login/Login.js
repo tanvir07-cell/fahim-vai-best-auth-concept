@@ -2,10 +2,13 @@ import React, { useEffect, useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
 
 import "react-toastify/dist/ReactToastify.css";
-import { useSignInWithEmailAndPassword } from "react-firebase-hooks/auth";
+import {
+  useSignInWithEmailAndPassword,
+  useSignInWithGoogle,
+} from "react-firebase-hooks/auth";
 import auth from "../../firebase.init";
 import "./Login.css";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [userInfo, setUserInfo] = useState({
@@ -19,6 +22,9 @@ const Login = () => {
   });
   const [signInWithEmailAndPassword, user, loading, hooksError] =
     useSignInWithEmailAndPassword(auth);
+
+  const [signInWithGoogle, googleUser, googleLoading, error] =
+    useSignInWithGoogle(auth);
 
   const handleEmailChange = (event) => {
     if (/^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$/.test(event.target.value)) {
@@ -48,6 +54,10 @@ const Login = () => {
     }
   };
 
+  const googleSignIn = () => {
+    signInWithGoogle();
+  };
+
   //   react-firebase-hooks theke jei hooksError ti asbe seti amaderke response hishebe dibe!
   // tai useEffect use korte hobe:
   useEffect(() => {
@@ -74,6 +84,19 @@ const Login = () => {
       }
     }
   }, [hooksError]);
+  const navigate = useNavigate();
+  const location = useLocation();
+  //   ei from er means holo jodi signUp hoye jay tahole "/"(home page e niye jao)
+
+  const from = location?.state?.from?.pathname || "/";
+
+  //   ar useEffect e user ti ke rekhe navigate korar means hocceh amra jodi firebase theke response pai je user ti create hoyeche tokhon ei amra home page e niye jabo tai!
+  useEffect(() => {
+    const User = user || googleUser;
+    if (User) {
+      navigate(from);
+    }
+  }, [user, googleUser]);
 
   return (
     <div className="login-container">
@@ -103,6 +126,7 @@ const Login = () => {
           Don't have an account ? <Link to="/signup">first signUp</Link>
         </p>
       </form>
+      <button onClick={googleSignIn}>Google</button>
 
       <ToastContainer></ToastContainer>
     </div>
